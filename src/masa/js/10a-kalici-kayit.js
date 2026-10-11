@@ -19,9 +19,16 @@ function cloudSave(){
   if(!CLOUD.ready){CLOUD.dirty=true;return;}
   clearTimeout(CLOUD.timer);
   CLOUD.timer=setTimeout(async()=>{
-    try{await CLOUD.ref.set(cloudDoc());cloudNote("Portföy ve takip listesi hesabınıza kaydedildi; başka cihazda da açılır.");}
+    try{const doc=cloudDoc();CLOUD.lastAt=doc.at;await CLOUD.ref.set(doc);cloudNote("Portföy ve takip listesi hesabınıza kaydedildi; başka cihazda da açılır.");}
     catch(e){cloudNote("Hesaba kaydedilemedi; değişiklik şimdilik yalnızca bu tarayıcıda."+(e&&e.code==="not_granted"?" Sayfanın İzinler menüsünden veri saklamaya izin verin.":""));}
   },800);
+}
+/* Hesaptan gelen veri P ve W'ye uygulandıktan sonra: tarayıcı yedeğini, kural kutularını ve tabloları günceller */
+function cloudRender(msg){
+  try{localStorage.setItem("hm_port",JSON.stringify({pos:P.pos}));localStorage.setItem("hm_watch",JSON.stringify(W));}catch{}
+  $("wRsiLo").value=W.rules.rsiLo;$("wRsiHi").value=W.rules.rsiHi;$("wPHi").value=W.rules.pHi;$("wPLo").value=W.rules.pLo;$("wSma").checked=!!W.rules.sma;
+  syncStar();SEEN.w=SEEN.p=false;renderPort();refreshWatch(true);tabData(TAB.cur);
+  cloudNote(msg);
 }
 async function cloudInit(){
   try{
@@ -32,13 +39,13 @@ async function cloudInit(){
     const snap=await CLOUD.ref.get();
     // yükleme bitmeden yapılmış bir değişiklik varsa o korunur ve hesaba yazılır
     const applied=!CLOUD.dirty&&snap.exists&&cloudApply(snap.data());
+    CLOUD.lastAt=snap.exists&&snap.data()?snap.data().at:null;
     CLOUD.ready=true;
-    if(applied){
-      try{localStorage.setItem("hm_port",JSON.stringify({pos:P.pos}));localStorage.setItem("hm_watch",JSON.stringify(W));}catch{}
-      $("wRsiLo").value=W.rules.rsiLo;$("wRsiHi").value=W.rules.rsiHi;$("wPHi").value=W.rules.pHi;$("wPLo").value=W.rules.pLo;$("wSma").checked=!!W.rules.sma;
-      syncStar();SEEN.w=SEEN.p=false;renderPort();refreshWatch(true);tabData(TAB.cur);
-      cloudNote("Portföy ve takip listesi hesabınızdan yüklendi; başka cihazda da açılır.");
-    }else if(P.pos.length||W.list.length||CLOUD.dirty)cloudSave();
+    // başka sekme ya da cihazdaki değişiklik canlı alınır: iki yerden düzenleme birbirinin üzerine yazmasın
+    CLOUD.ref.onSnapshot(sn=>{if(!sn.exists||sn.metadata.hasPendingWrites)return;const d=sn.data();if(!d||d.at===CLOUD.lastAt)return;
+      if(cloudApply(d)){CLOUD.lastAt=d.at;cloudRender("Başka bir sekme ya da cihazdaki değişiklik alındı.");}},()=>{});
+    if(applied)cloudRender("Portföy ve takip listesi hesabınızdan yüklendi; başka cihazda da açılır.");
+    else if(P.pos.length||W.list.length||CLOUD.dirty)cloudSave();
     else cloudNote("Portföy ve takip listesi hesabınıza kaydedilir; başka cihazda da açılır.");
   }catch(e){cloudNote("Hesaptaki kayıt okunamadı; portföy şimdilik yalnızca bu tarayıcıda saklanıyor.");}
 }
