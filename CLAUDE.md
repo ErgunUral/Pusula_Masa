@@ -32,7 +32,7 @@ GitHub: `ErgunUral/fintabels` (public). Kullanıcıyla Türkçe konuş.
 - `00-giris` durum nesnesi `S` · `01-formatting` pct (yüzde değeri alır), big, istDateTime · `02-fintables-calls` errCopy, call
 - `03-search` arama kutusu · `04-indicators` sma, ema, rsi, macd, boll, atr, stoch, swings · `05-charts` lightweight-charts · `05a-sekmeler` sekme yapısı (showTab, STOCK_TABS/LIST_TABS; sekme adı = section kimliği)
 - `06-loaders` load(), teknik/temel/analist/KAP yükleyicileri, buildT, computeSignals, finansal özet (BAL_ROWS, balRows) ve kullanıcının beş mali durum göstergesi (finMetrics) · `07-kap-duygu-analizi` · `07a-sahiplik` fon sahipliği ve açığa satış (loadOwn, ownMonths, shortStats)
-- `08-takip-listesi` (`W`, refreshWatch) · `09-kalici-model` gömülü model (`FZ`) · `10-portfoy` (`P`) · `10a-kalici-kayit` portföy ve takip listesini `db` yeteneğiyle kişiye özel yolda saklar (cloudInit, cloudSave, cloudApply) · `11-bist-30-tarama` (`SC`)
+- `08-takip-listesi` (`W`, refreshWatch) · `08a-finans-onbellek` paylaşılan son dönem finansalları ve Temel tarama (getLatestFund, renderFT) · `08b-karne` Özet sekmesi (renderOzet: vade, destek/direnç, değerleme, bedelsiz) · `08c-alarmlar` · `08d-akis` Alan/satan sekmesi (loadAkis) · `09-kalici-model` gömülü model (`FZ`) · `10-portfoy` (`P`) · `10a-kalici-kayit` portföy ve takip listesini `db` yeteneğiyle kişiye özel yolda saklar (cloudInit, cloudSave, cloudApply) · `11-bist-30-tarama` (`SC`)
 - `12-ai` Claude yorumu · `13-ml` saf hesap: adjustCorporate, stockFeatures, trainGBDT (erken durdurma döngüsü), lojistik regresyon, runModel, geri test
 - `14-model-arayuzu` (`ML`), fetchUniverse, modelAge/modelExpired · `15-boot`
 
@@ -44,7 +44,7 @@ GitHub: `ErgunUral/fintabels` (public). Kullanıcıyla Türkçe konuş.
 ## Sorgu ve token bütçesi (Masa)
 
 Fintables günlük kotası ve kullanıcının Claude kullanımı sınırlı kaynaklardır; yeni özellik eklerken şu düzen korunmalı:
-- Hisse açılınca yalnızca künye + fiyat geçmişi çekilir (2 sorgu). Diğer bölümler sekmesi ilk açıldığında `ensurePart()` ile gelir; yeni bir bölüm eklersen `PART_LOADERS` ve `TAB_PART`'a yaz, `load()` içinde doğrudan çağırma, `resetParts()`'a boş hâlini ekle.
+- Hisse açılınca yalnızca künye, fiyat geçmişi ve analist hedefleri çekilir; Özet sekmesindeki karne ayrıca 2 sorgu yapar. Diğer bölümler sekmesi ilk açıldığında `ensurePart()` ile gelir; yeni bir bölüm eklersen `PART_LOADERS` ve `TAB_PART`'a yaz, `load()` içinde doğrudan çağırma, `resetParts()`'a boş hâlini ekle.
 - Gün içinde değişmeyen sorgular `sql(..., SLOW)` ile 6 saat önbelleklenir.
 - Takip listesi göstergeleri hisse başına günde bir kez hesaplanır (`WC`, localStorage `hm_wc`); liste sekmeleri ilk açılışta yüklenir (`tabData`, `SEEN`).
 - Yapay zeka yorumu hisse başına günlük saklanır (`hm_ai`); yorum istenince eksik parçalar o an çekilir.
@@ -53,6 +53,7 @@ Fintables günlük kotası ve kullanıcının Claude kullanımı sınırlı kayn
 
 Masa'nın yetenek bildirimi: `mcp` (Fintables: veri_sorgula, dokumanlarda_ara, dokuman_chunk_yukle), `sample`, `db`, `user`. Yayında `capabilities` verilmezse saklı bildirim korunur; verilirse **tam liste** yazılmalı (eksik kalan iptal olur). Lab: `mcp` (veri_sorgula), `sample`.
 
+0. Sayfa başka oturumlarda doğrudan claude.ai üzerinden de değiştiriliyor (8–11 Ekim 2026'da böyle oldu). Yayın reddedilirse: son yayınlanan commit'te derle, `node tools/import.mjs <kök> masa <canlı dosya>` ile farkı `src/`'ye işle, commit et, kendi değişikliklerini üstüne rebase et.
 1. `npm test`, sonra `Artifact publish` ile `dist/<dosya>` ve tablodaki `url`.
 2. Yayın "daha yeni sürüm var" diye reddedilirse sayfa başka yerde değişmiştir. Reddin verdiği kayıtlı dosyayı **okumadan** `node build.mjs --diff <o dosya>` çalıştır; çıkan farkları `src/`'ye işle, tekrar yayınla.
 3. Yayından sonra aşağıdaki sürüm satırını güncelle, commit ve push et.
