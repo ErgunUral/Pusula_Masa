@@ -1,13 +1,28 @@
 /* ---------- loaders ---------- */
 function setNote(el,msg,err){el.innerHTML=`<div class="note ${err?"err":""}">${esc(msg)}</div>`;}
 
+/* Hisse verisi parça parça ve yalnızca gerektiğinde çekilir (Fintables sorgu kotasını korumak için); aynı hisse için her parça bir kez. */
+const PART_LOADERS={tech:c=>loadTech(c),fund:c=>loadFund(c),analyst:c=>loadAnalyst(c),kap:c=>loadKap(c),own:c=>loadOwn(c)};
+function ensurePart(name){const code=S.code;if(!code||!S.data.quote||!S.parts)return Promise.resolve();
+  return S.parts[name]||(S.parts[name]=PART_LOADERS[name](code));}
+/* Hisse değişince henüz yüklenmemiş bölümlerde önceki hissenin verisi kalmasın */
+function resetParts(){
+  const sk=(id,n)=>{$(id).innerHTML=`<tr><td colspan="${n}" class="skel">Yükleniyor…</td></tr>`;};
+  [...$("valTiles").children].forEach(t=>{t.querySelector(".val").textContent="—";});
+  [...$("anTiles").children,...$("ownTiles").children].forEach(t=>{t.querySelector(".val").textContent="—";t.querySelector(".sub").textContent="";});
+  $("qBars").innerHTML=`<div class="skel">Yükleniyor…</div>`;$("ratios").innerHTML=`<div class="skel">Yükleniyor…</div>`;
+  $("finTiles").innerHTML=`<div style="grid-column:1/-1" class="skel">Yükleniyor…</div>`;
+  $("growthNote").textContent="";$("fStamp").textContent="";$("ownStamp").textContent="";
+  sk("balBody",4);sk("anBody",5);sk("ownFundsBody",5);sk("ownMonthsBody",4);sk("ownShortBody",4);
+  $("news").innerHTML=`<li class="skel">Yükleniyor…</li>`;
+}
 /* fromUser: kullanıcı bir hisse seçtiyse ve liste sekmesindeyse son hisse sekmesine dönülür */
 async function load(code,fromUser=true){
   code=String(code).toUpperCase();
   if(fromUser&&LIST_TABS.includes(TAB.cur))showTab(TAB.stock);
-  S.code=code;S.data={code};S.turns=[];
+  S.code=code;S.data={code};S.turns=[];S.parts={};resetParts();
   try{localStorage.setItem("hm_last",code);}catch{}
-  $("aiOut").innerHTML="";$("askForm").hidden=true;$("aiRun").disabled=true;
+  $("aiOut").innerHTML="";$("askForm").hidden=true;$("aiRun").disabled=true;showCachedAI(code);
   if(kapCtl)kapCtl.abort();$("kapSum").textContent="Son 12 bildirim. Puanlama, her bildirimin metnini okuyup olası etkisini −2 ile +2 arasında değerlendirir.";$("kapSent").disabled=true;
   syncStar();
   $("pageNote").hidden=true;
@@ -25,8 +40,10 @@ async function load(code,fromUser=true){
   S.data.quote=quote;renderQuote(quote);
   if(S.code!==code)return;
 
-  const jobs=[loadTech(code),loadFund(code),loadAnalyst(code),loadKap(code),loadOwn(code)];
-  await Promise.allSettled(jobs);
+  // fiyat geçmişi (başlıktaki 52 hafta aralığı, model, karne) ve analist hedefleri (karnedeki potansiyel) her zaman gerekir;
+  // diğer parçalar sekmesi açılınca çekilir
+  await Promise.allSettled([ensurePart("tech"),ensurePart("analyst")]);
+  if(S.code===code)tabData(TAB.cur);
   if(S.code!==code)return;
   renderOzet(code);
   AK.code=null;if(TAB.cur==="akis")loadAkis(code);
@@ -163,7 +180,7 @@ const pick=(map,names)=>{for(const n of names)if(map[n]!=null)return map[n];retu
 
 async function loadFund(code){
   try{
-    const per=await sql(`SELECT yil, ay, finansal_tablo_sablonu, yayinlanma_tarihi_utc FROM hisse_finansal_tablolari WHERE hisse_senedi_kodu = '${code}' ORDER BY yil DESC, ay DESC LIMIT 1`,`${code} son finansal dönem`);
+    const per=await sql(`SELECT yil, ay, finansal_tablo_sablonu, yayinlanma_tarihi_utc FROM hisse_finansal_tablolari WHERE hisse_senedi_kodu = '${code}' ORDER BY yil DESC, ay DESC LIMIT 1`,`${code} son finansal dönem`,SLOW);
     if(S.code!==code)return;
     if(!per.length){["qBars","ratios"].forEach(id=>$(id).innerHTML=`<div class="skel">Bu hisse için finansal tablo bulunamadı.</div>`);$("balBody").innerHTML="";$("finTiles").innerHTML="";return;}
     const {yil,ay,finansal_tablo_sablonu:tpl}=per[0];
@@ -172,9 +189,9 @@ async function loadFund(code){
     const incNames=[...REV,...NET,...EBITDA,...GROSS];
     const balNames=[...new Set(BAL_ROWS.filter(r=>r[2]!=="ttm").flatMap(r=>r[1]))];
     const [inc,bal,rat]=await Promise.all([
-      sql(`SELECT yil, ay, kalem, try_ceyreklik, try_ttm FROM hisse_finansal_tablolari_gelir_tablosu_kalemleri WHERE hisse_senedi_kodu = '${code}' AND yil >= ${yil-3} AND kalem IN (${inList(incNames)}) ORDER BY yil, ay LIMIT 120`,`${code} çeyreklik gelir tablosu`),
-      sql(`SELECT yil, ay, kalem, try_donemsel FROM hisse_finansal_tablolari_bilanco_kalemleri WHERE hisse_senedi_kodu = '${code}' AND ay = ${ay} AND yil IN (${yil}, ${yil-1}) AND kalem IN (${inList(balNames)}) LIMIT 60`,`${code} bilanço özeti`),
-      sql(`SELECT kategori, oran, deger FROM hisse_finansal_tablolari_finansal_oranlari WHERE hisse_senedi_kodu = '${code}' AND yil = ${yil} AND ay = ${ay} ORDER BY kategori, satir_no LIMIT 80`,`${code} finansal oranlar`)
+      sql(`SELECT yil, ay, kalem, try_ceyreklik, try_ttm FROM hisse_finansal_tablolari_gelir_tablosu_kalemleri WHERE hisse_senedi_kodu = '${code}' AND yil >= ${yil-3} AND kalem IN (${inList(incNames)}) ORDER BY yil, ay LIMIT 120`,`${code} çeyreklik gelir tablosu`,SLOW),
+      sql(`SELECT yil, ay, kalem, try_donemsel FROM hisse_finansal_tablolari_bilanco_kalemleri WHERE hisse_senedi_kodu = '${code}' AND ay = ${ay} AND yil IN (${yil}, ${yil-1}) AND kalem IN (${inList(balNames)}) LIMIT 60`,`${code} bilanço özeti`,SLOW),
+      sql(`SELECT kategori, oran, deger FROM hisse_finansal_tablolari_finansal_oranlari WHERE hisse_senedi_kodu = '${code}' AND yil = ${yil} AND ay = ${ay} ORDER BY kategori, satir_no LIMIT 80`,`${code} finansal oranlar`,SLOW)
     ]);
     if(S.code!==code)return;
     // income by period
@@ -248,7 +265,7 @@ function drawBars(qs){
 const TAV={al:["AL","pos"],endeks_ustu:["Endeks üstü","pos"],tut:["TUT","neu"],endekse_paralel:["Endekse paralel","neu"],notr:["Nötr","neu"],endeks_alti:["Endeks altı","neg"],sat:["SAT","neg"]};
 async function loadAnalyst(code){
   try{
-    const rows=await sql(`SELECT hf.yayin_tarihi_europe_istanbul, hf.araci_kurum_kodu, ak.kisa_unvan, hf.tavsiye, hf.hedef_fiyat, hf.model_portfoyde FROM hisse_senedi_araci_kurum_hedef_fiyatlari hf LEFT JOIN araci_kurumlar ak ON ak.araci_kurum_kodu = hf.araci_kurum_kodu WHERE hf.hisse_senedi_kodu = '${code}' ORDER BY hf.yayin_tarihi_europe_istanbul DESC LIMIT 80`,`${code} aracı kurum hedef fiyatları`);
+    const rows=await sql(`SELECT hf.yayin_tarihi_europe_istanbul, hf.araci_kurum_kodu, ak.kisa_unvan, hf.tavsiye, hf.hedef_fiyat, hf.model_portfoyde FROM hisse_senedi_araci_kurum_hedef_fiyatlari hf LEFT JOIN araci_kurumlar ak ON ak.araci_kurum_kodu = hf.araci_kurum_kodu WHERE hf.hisse_senedi_kodu = '${code}' ORDER BY hf.yayin_tarihi_europe_istanbul DESC LIMIT 80`,`${code} aracı kurum hedef fiyatları`,SLOW);
     if(S.code!==code)return;
     const p=S.data.quote&&S.data.quote.son_fiyat;
     // 6 aylık pencere bugünden geriye sayılır (hissenin son raporundan değil)

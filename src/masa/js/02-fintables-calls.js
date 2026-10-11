@@ -16,8 +16,11 @@ function errCopy(e){
     default:return"Veri alınamadı ("+(c||"hata")+"). Yeniden denemek için Analiz et'e basın.";
   }
 }
-async function call(tool,input){
-  const run=()=>S.mcp.callTool(SERVER,tool,input,{cache:{staleTime:60000,gcTime:600000}});
+/* Gün içinde değişmeyen veriler (finansal tablolar, analist raporları, fon raporları) için uzun önbellek: aynı sorgu tekrar gönderilmez */
+const SLOW={stale:6*3600e3};
+async function call(tool,input,opts){
+  const stale=(opts&&opts.stale)||60000;
+  const run=()=>S.mcp.callTool(SERVER,tool,input,{cache:{staleTime:stale,gcTime:Math.max(600000,stale)}});
   try{return await run();}
   catch(e){
     if(e&&e.retryable){await new Promise(r=>setTimeout(r,Math.min(e.retryAfterMs||1500,8000)+Math.random()*600));return await run();}

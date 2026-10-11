@@ -12,8 +12,9 @@ function parseTable(md){
     if(v===undefined||v===""){o[h]=null;return;}
     o[h]=/^-?\d+(\.\d+)?(e[+-]?\d+)?$/i.test(v)?Number(v):(v==="true"?true:v==="false"?false:v);});return o;});
 }
-async function sql(q,purpose){
-  const r=await call("veri_sorgula",{sql:q,purpose});
+/* opts sayfanın call()'una aynen geçer (ör. Masa'da {stale: ms} ile önbellek süresi) */
+async function sql(q,purpose,opts){
+  const r=await call("veri_sorgula",{sql:q,purpose},opts);
   let p=r.payload;
   if(typeof p==="string"){try{p=JSON.parse(p);}catch{ }}
   if(p&&typeof p==="object"&&"table" in p)return parseTable(p.table);

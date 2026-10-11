@@ -12,6 +12,6 @@
   load(last,false);
   $("mTrain").disabled=false;$("scRun").disabled=false;$("ftRun").disabled=false;$("alRun").disabled=false;
   if(ML.res)renderModel();
-  refreshWatch();refreshPort();
+  tabData(TAB.cur);
 })();
 })();

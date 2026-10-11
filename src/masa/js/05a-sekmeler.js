@@ -3,6 +3,13 @@
    liste sekmelerinde (portföy, takip, tarama) gizlenir. */
 const STOCK_TABS=["ozet","teknik","temel","analist","sahiplik","akis","kap","model","ai"],LIST_TABS=["alarmlar","portfoy","takip","tarama","ttarama"];
 const TAB={cur:"teknik",stock:"teknik"};
+/* Sekmenin verisi ilk açıldığında çekilir. Liste sekmeleri oturumda bir kez; hisse sekmeleri hisse başına bir kez (ensurePart). */
+const SEEN={w:false,p:false},TAB_PART={temel:"fund",analist:"analyst",sahiplik:"own",kap:"kap"};
+function tabData(id){
+  if(!S.mcp)return;
+  if(id==="takip"||id==="portfoy"){if(!SEEN.w){SEEN.w=true;refreshWatch();}if(id==="portfoy"&&!SEEN.p){SEEN.p=true;refreshPort();}return;}
+  if(TAB_PART[id])ensurePart(TAB_PART[id]);
+}
 /* Grafikler gizli sekmede oluşturulmuş olabilir: görünür olunca boyut ve aralık yeniden uygulanır */
 function fixCharts(){const C=S.charts;if(!C)return;const els=[$("chMain"),$("chRsi"),$("chMacd")];
   [C.main,C.r,C.m].forEach((c,i)=>c.applyOptions({width:els[i].clientWidth,height:els[i].clientHeight||(i?120:380)}));setRange(currentRange);}
@@ -15,6 +22,7 @@ function showTab(id,save=true){
   if(save){try{localStorage.setItem("hm_tab",id);}catch{}}
   if(id==="teknik")fixCharts();
   if(id==="akis"&&S.code&&typeof loadAkis==="function"&&S.data&&S.data.T)loadAkis(S.code);
+  tabData(id);
 }
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 $("tabs").addEventListener("keydown",e=>{if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;

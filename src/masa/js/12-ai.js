@@ -3,7 +3,7 @@
 function context(){
   const d=S.data,q=d.quote||{};
   return JSON.stringify({hisse:q.hisse_senedi_kodu,unvan:q.unvan,sektor:q.sektor,sonFiyat:q.son_fiyat,gunlukDegisimYuzde:q.gunici_getiri,piyasaDegeri_mrTL:q.piyasa_degeri&&+(q.piyasa_degeri/1e9).toFixed(1),
-    teknik:d.tech||"yok",temel:d.fund||"yok",analistler:d.analyst||"yok",fonSahipligiVeAcigaSatis:d.own||"yok",kapBildirimleri:d.kap||"yok",kapDuyguAnalizi:d.kapSent||"yapılmadı",stratejiGeriTesti:d.bt||"yok",bist30Genisligi:S.scan||"tarama yapılmadı",yonTahminModeli:d.model||"eğitilmedi"});
+    teknik:d.tech||"yok",temel:d.fund||"yok",analistler:d.analyst||"yok",fonSahipligiVeAcigaSatis:d.own||"yok",kapBildirimleri:d.kapSent?"kapDuyguAnalizi içinde":(d.kap||"yok"),kapDuyguAnalizi:d.kapSent||"yapılmadı",stratejiGeriTesti:d.bt||"yok",bist30Genisligi:S.scan||"tarama yapılmadı",yonTahminModeli:d.model||"eğitilmedi"});
 }
 const RULES=`Sen Borsa İstanbul hisselerini inceleyen deneyimli bir analistsin. Aşağıdaki JSON, Fintables'tan çekilmiş güncel verilerdir; yalnızca bu verilere dayan, veride olmayan rakam veya olay uydurma. Parasal değerler aksi belirtilmedikçe milyar TL (mr TL). Türkçe yaz, sade ve net ol.`;
 let aiCtl=null;
@@ -28,8 +28,16 @@ async function runAI(promptTurns,{chat}={}){
   }finally{$("aiStop").hidden=true;$("aiRun").disabled=!S.sample;aiCtl=null;}
 }
 $("aiStop").onclick=()=>aiCtl&&aiCtl.abort();
+/* Aynı hisse için aynı gün üretilmiş yorum tarayıcıda saklanır; yeniden üretmek Claude kullanımından düşer */
+function aiCache(){const d=istDate(new Date().toISOString());try{const v=JSON.parse(localStorage.getItem("hm_ai")||"null");if(v&&v.d===d&&v.c)return v;}catch{}return{d,c:{}};}
+function showCachedAI(code){const t=aiCache().c[code];$("aiRun").textContent=t?"Yeniden oluştur":"Analizi oluştur";
+  if(t)$("aiOut").innerHTML=mdRender(t)+`<p class="sub">Bu yorum bugün daha önce oluşturuldu ve saklandı. Güncel veriyle yenilemek için "Yeniden oluştur"a basın.</p>`;}
 $("aiRun").onclick=async()=>{
   if(!S.sample||!S.data.quote)return;
+  // yorum tüm bölümlerin verisini kullanır: henüz açılmamış sekmelerin verisi şimdi çekilir
+  const code=S.code;$("aiRun").disabled=true;$("aiOut").innerHTML=`<div class="thinking"><span class="dot"></span>Eksik veriler tamamlanıyor…</div>`;
+  await Promise.allSettled(["tech","fund","analyst","kap","own"].map(ensurePart));
+  if(S.code!==code)return;
   const prompt=`${RULES}
 
 Görev: Bu hisse için bütünleşik bir değerlendirme yaz. Şu başlıkları "### " ile kullan:
@@ -48,7 +56,8 @@ VERİ:
 ${context()}`;
   S.turns=[{role:"user",content:prompt}];
   const text=await runAI(prompt);
-  if(text){S.turns.push({role:"assistant",content:text});$("askForm").hidden=false;}
+  if(text){S.turns.push({role:"assistant",content:text});$("askForm").hidden=false;
+    if(S.code===code){const a=aiCache();a.c[code]=text;try{localStorage.setItem("hm_ai",JSON.stringify(a));}catch{}$("aiRun").textContent="Yeniden oluştur";}}
 };
 $("askForm").addEventListener("submit",async e=>{
   e.preventDefault();const v=$("askIn").value.trim();if(!v||!S.sample||aiCtl)return;

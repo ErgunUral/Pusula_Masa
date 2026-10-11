@@ -28,8 +28,8 @@ async function loadOwn(code){
   const JOIN=`FROM fon_portfoy_dagilim_raporu_sembol_agirliklari a JOIN fon_portfoy_dagilim_raporlari r ON r.fon_portfoy_dagilim_raporu_id = a.fon_portfoy_dagilim_raporu_id`;
   try{
     const [agg,sh]=await Promise.all([
-      sql(`SELECT r.yil, r.ay, COUNT(DISTINCT r.fon_kodu) AS fon_sayisi, SUM(a.fondaki_lot) AS toplam_lot ${JOIN} WHERE a.fon_kodu = '${code}' AND (r.yil > ${fy} OR (r.yil = ${fy} AND r.ay >= ${fm})) AND r.ay >= 1 AND r.ay <= 12 GROUP BY r.yil, r.ay ORDER BY r.yil DESC, r.ay DESC LIMIT 20`,`${code} fon sahipliği aylık seyir`),
-      sql(`SELECT tarih_europe_istanbul, aciga_satis_hacmi_tl, toplam_islem_hacmi_tl, ortalama_aciga_satis_fiyati FROM gunluk_aciga_satis_istatistikleri WHERE hisse_senedi_kodu = '${code}' AND tarih_europe_istanbul >= DATE '${shortFrom}' ORDER BY tarih_europe_istanbul DESC LIMIT 40`,`${code} açığa satış istatistikleri`)]);
+      sql(`SELECT r.yil, r.ay, COUNT(DISTINCT r.fon_kodu) AS fon_sayisi, SUM(a.fondaki_lot) AS toplam_lot ${JOIN} WHERE a.fon_kodu = '${code}' AND (r.yil > ${fy} OR (r.yil = ${fy} AND r.ay >= ${fm})) AND r.ay >= 1 AND r.ay <= 12 GROUP BY r.yil, r.ay ORDER BY r.yil DESC, r.ay DESC LIMIT 20`,`${code} fon sahipliği aylık seyir`,SLOW),
+      sql(`SELECT tarih_europe_istanbul, aciga_satis_hacmi_tl, toplam_islem_hacmi_tl, ortalama_aciga_satis_fiyati FROM gunluk_aciga_satis_istatistikleri WHERE hisse_senedi_kodu = '${code}' AND tarih_europe_istanbul >= DATE '${shortFrom}' ORDER BY tarih_europe_istanbul DESC LIMIT 40`,`${code} açığa satış istatistikleri`,SLOW)]);
     if(S.code!==code)return;
     const O=ownMonths(agg,today),SS=shortStats(sh),cur=O.cur,prev=O.prev;S.data._own={cur,prev};
     const cap=S.data.quote&&S.data.quote.odenmis_sermaye;
@@ -48,10 +48,10 @@ async function loadOwn(code){
     }else skel("ownShortBody",4,"Son 45 günde açığa satış kaydı yok (izin verilmeyen ya da açığa satılmayan hisse).");
     let funds=[];
     if(cur){
-      const top=await sql(`SELECT r.fon_kodu, f.unvan, f.fon_tipi, a.yuzdesel_agirlik, a.fondaki_lot ${JOIN} LEFT JOIN fonlar f ON f.fon_kodu = r.fon_kodu WHERE a.fon_kodu = '${code}' AND r.yil = ${cur.yil} AND r.ay = ${cur.ay} AND a.fondaki_lot > 0 ORDER BY a.fondaki_lot DESC LIMIT 12`,`${code} hisseyi en çok tutan fonlar`);
+      const top=await sql(`SELECT r.fon_kodu, f.unvan, f.fon_tipi, a.yuzdesel_agirlik, a.fondaki_lot ${JOIN} LEFT JOIN fonlar f ON f.fon_kodu = r.fon_kodu WHERE a.fon_kodu = '${code}' AND r.yil = ${cur.yil} AND r.ay = ${cur.ay} AND a.fondaki_lot > 0 ORDER BY a.fondaki_lot DESC LIMIT 12`,`${code} hisseyi en çok tutan fonlar`,SLOW);
       if(S.code!==code)return;
       const pm={};
-      if(prev&&top.length){const pr=await sql(`SELECT r.fon_kodu, a.fondaki_lot ${JOIN} WHERE a.fon_kodu = '${code}' AND r.yil = ${prev.yil} AND r.ay = ${prev.ay} AND r.fon_kodu IN (${inList(top.map(x=>x.fon_kodu))}) LIMIT 40`,`${code} fon pozisyonlarının önceki ayı`);
+      if(prev&&top.length){const pr=await sql(`SELECT r.fon_kodu, a.fondaki_lot ${JOIN} WHERE a.fon_kodu = '${code}' AND r.yil = ${prev.yil} AND r.ay = ${prev.ay} AND r.fon_kodu IN (${inList(top.map(x=>x.fon_kodu))}) LIMIT 40`,`${code} fon pozisyonlarının önceki ayı`,SLOW);
         if(S.code!==code)return;pr.forEach(x=>{pm[x.fon_kodu]=(pm[x.fon_kodu]||0)+(x.fondaki_lot||0);});}
       funds=top.map(x=>({fon:x.fon_kodu,unvan:x.unvan,tip:FON_TIP[x.fon_tipi]||"—",lot:x.fondaki_lot,w:x.yuzdesel_agirlik,ch:pm[x.fon_kodu]>0?(x.fondaki_lot/pm[x.fon_kodu]-1)*100:null,yeni:!!prev&&!(pm[x.fon_kodu]>0)}));
       $("ownFundsBody").innerHTML=funds.length?funds.map(x=>`<tr><td><b class="num">${esc(x.fon)}</b><div class="sub" style="max-width:38ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(x.unvan||"")}">${esc(x.unvan||"")}</div></td><td>${esc(x.tip)}</td><td class="r num">${nf(0).format(x.lot)}</td><td class="r num">${x.w!=null?"%"+fmt(x.w,1):"—"}</td><td class="r num" style="color:${x.ch>0?"var(--up)":x.ch<0?"var(--down)":"inherit"}">${x.yeni?'<span class="pill pos">Yeni</span>':pct(x.ch)}</td></tr>`).join(""):`<tr><td colspan="5" class="skel">Fon pozisyonu bulunamadı.</td></tr>`;

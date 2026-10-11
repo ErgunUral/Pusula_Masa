@@ -7,7 +7,7 @@ function syncStar(){const on=W.list.includes(S.code);const b=$("watchBtn");b.tex
 $("watchBtn").onclick=()=>{if(!S.code)return;const i=W.list.indexOf(S.code);if(i>=0)W.list.splice(i,1);else W.list.push(S.code);saveW();syncStar();refreshWatch();};
 ["wRsiLo","wRsiHi","wPHi","wPLo"].forEach(id=>{const k={wRsiLo:"rsiLo",wRsiHi:"rsiHi",wPHi:"pHi",wPLo:"pLo"}[id];$(id).value=W.rules[k];$(id).addEventListener("change",e=>{const v=Number(e.target.value);if(isFinite(v)){W.rules[k]=v;saveW();refreshWatch(true);}});});
 $("wSma").checked=!!W.rules.sma;$("wSma").addEventListener("change",e=>{W.rules.sma=e.target.checked;saveW();refreshWatch(true);});
-$("wRefresh").onclick=()=>refreshWatch();
+$("wRefresh").onclick=()=>refreshWatch(false,true);
 /* toplu içe aktarma */
 const trUp=s=>s.replace(/i/g,"İ").replace(/ı/g,"I").toUpperCase().replace(/İ/g,"I").replace(/Ğ/g,"G").replace(/Ü/g,"U").replace(/Ş/g,"S").replace(/Ö/g,"O").replace(/Ç/g,"C");
 function parseCodes(txt){const out=[];String(txt||"").split(/[\s,;|\t"'()\[\]]+/).forEach(t=>{let c=trUp(t.trim()).replace(/\.(IS|E|IST)$/,"").replace(/^BIST:|^IST:/,"");if(/^[A-Z][A-Z0-9]{2,5}$/.test(c)&&!out.includes(c))out.push(c);});return out;}
@@ -39,7 +39,10 @@ $("wExport").onclick=async()=>{const t=W.list.join(", ");if(!t){wImpMsg("Liste b
 let wClearArm=0;$("wClear").onclick=()=>{if(!W.list.length)return;if(Date.now()-wClearArm>4000){wClearArm=Date.now();$("wClear").textContent="Emin misiniz? Tekrar basın";setTimeout(()=>{$("wClear").textContent="Listeyi temizle";},4000);return;}
   W.list=[];wCache={};saveW();syncStar();$("wClear").textContent="Listeyi temizle";wImpMsg("Liste temizlendi.");refreshWatch();};
 let wCache={};
-async function refreshWatch(rulesOnly){
+/* Göstergeler (RSI, SMA50) hisse başına günde bir kez hesaplanıp tarayıcıda saklanır; fiyatlar her yenilemede tek sorguyla gelir.
+   "Güncelle" düğmesi (force) göstergeleri de yeniden çeker. */
+let WC={d:null,c:{}};try{const v=JSON.parse(localStorage.getItem("hm_wc")||"null");if(v&&v.d&&v.c)WC=v;}catch{}
+async function refreshWatch(rulesOnly,force){
   const body=$("wBody");
   if(!W.list.length){body.innerHTML=`<tr><td colspan="12" class="skel">Listeniz boş. Bir hisse açıp "Takibe al"a basın ya da "Toplu içe aktar" ile kod listesi yapıştırın.</td></tr>`;$("wCount").textContent="";return;}
   if(!S.mcp)return;
@@ -50,7 +53,10 @@ async function refreshWatch(rulesOnly){
       const qm=Object.fromEntries(q.map(r=>[r.hisse_senedi_kodu,r]));
       // 3 hisse / sorgu (~85 işlem günü × 3 < 300 satır): sorgu sayısı üçte birine iner
       const from=new Date(Date.now()-125*864e5);from.setUTCHours(0,0,0,0);const fromLit=from.toISOString().slice(0,19).replace("T"," ");
-      const groups=[];for(let i=0;i<W.list.length;i+=3)groups.push(W.list.slice(i,i+3));
+      const day=istDate(new Date().toISOString());if(WC.d!==day)WC={d:day,c:{}};
+      const need=force?W.list.slice():W.list.filter(c=>!WC.c[c]);
+      W.list.forEach(c=>{const k=WC.c[c],qq=qm[c];if(k&&!need.includes(c))wCache[c]={p:qq?qq.son_fiyat:null,g:qq?qq.gunici_getiri:null,rsi:k.rsi,above:k.above,cross:k.cross};});
+      const groups=[];for(let i=0;i<need.length;i+=3)groups.push(need.slice(i,i+3));
       const one=async g=>{const rows=await sql(`SELECT kod, zaman_utc, yuksek, dusuk, kapanis FROM mumlar_gunluk_gh WHERE kod IN (${inList(g)}) AND zaman_utc >= TIMESTAMP '${fromLit}' ORDER BY kod, zaman_utc LIMIT 300`,`Takip listesi göstergeleri: ${g.join(", ")}`);
         g.forEach(code=>{try{
           const R=parseCandles(rows.filter(r=>r.kod===code));if(R.length<20){wCache[code]={err:"Yeterli fiyat geçmişi yok"};return;}
@@ -58,9 +64,11 @@ async function refreshWatch(rulesOnly){
           const c=A.c;const qq=qm[code];if(qq&&qq.son_fiyat&&istDate(qq.son_fiyat_zaman_utc)===A.t[A.t.length-1])c[c.length-1]=qq.son_fiyat;
           const r=rsi(c),s50=sma(c,50),n=c.length-1;
           wCache[code]={p:qq?qq.son_fiyat:c[n],g:qq?qq.gunici_getiri:null,rsi:r[n],above:s50[n]!=null?c[n]>s50[n]:null,cross:s50[n]!=null&&s50[n-1]!=null?(c[n]>s50[n])!==(c[n-1]>s50[n-1]):false};
+          WC.c[code]={rsi:wCache[code].rsi,above:wCache[code].above,cross:wCache[code].cross};
         }catch(e){wCache[code]={err:"Hesaplanamadı"};}});};
       let gi=0,done=0;const worker=async()=>{while(gi<groups.length){const g=groups[gi++];try{await one(g);}catch(e){g.forEach(code=>wCache[code]={err:errCopy(e)});}done++;if(groups.length>3)body.innerHTML=`<tr><td colspan="12" class="skel">${W.list.length} hisse güncelleniyor… ${done}/${groups.length}</td></tr>`;}};
       await Promise.all(Array.from({length:Math.min(4,groups.length)},worker));
+      try{localStorage.setItem("hm_wc",JSON.stringify(WC));}catch{}
     }catch(e){body.innerHTML=`<tr><td colspan="12"><div class="note err">${esc(errCopy(e))}</div></td></tr>`;return;}
     getLatestFund(W.list).then(()=>refreshWatch(true)).catch(()=>{});
   }

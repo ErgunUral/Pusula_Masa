@@ -41,6 +41,14 @@ GitHub: `ErgunUral/fintabels` (public). Kullanıcıyla Türkçe konuş.
 - `02-uygulama` pct (oran alır: Masa'dakinden farklı), errCopy, call · `03-veri-indirme` syncData, buildDB
 - `04-ayarlar` (`ST`) · `05-geri-test` runTest · `06-grafik` lineChart · `07-sonuclar` renderResults, duyarlılık, yapay zeka · `08-baslat`
 
+## Sorgu ve token bütçesi (Masa)
+
+Fintables günlük kotası ve kullanıcının Claude kullanımı sınırlı kaynaklardır; yeni özellik eklerken şu düzen korunmalı:
+- Hisse açılınca yalnızca künye + fiyat geçmişi çekilir (2 sorgu). Diğer bölümler sekmesi ilk açıldığında `ensurePart()` ile gelir; yeni bir bölüm eklersen `PART_LOADERS` ve `TAB_PART`'a yaz, `load()` içinde doğrudan çağırma, `resetParts()`'a boş hâlini ekle.
+- Gün içinde değişmeyen sorgular `sql(..., SLOW)` ile 6 saat önbelleklenir.
+- Takip listesi göstergeleri hisse başına günde bir kez hesaplanır (`WC`, localStorage `hm_wc`); liste sekmeleri ilk açılışta yüklenir (`tabData`, `SEEN`).
+- Yapay zeka yorumu hisse başına günlük saklanır (`hm_ai`); yorum istenince eksik parçalar o an çekilir.
+
 ## Yayın akışı
 
 Masa'nın yetenek bildirimi: `mcp` (Fintables: veri_sorgula, dokumanlarda_ara, dokuman_chunk_yukle), `sample`, `db`, `user`. Yayında `capabilities` verilmezse saklı bildirim korunur; verilirse **tam liste** yazılmalı (eksik kalan iptal olur). Lab: `mcp` (veri_sorgula), `sample`.

@@ -36,7 +36,7 @@ async function cloudInit(){
     if(applied){
       try{localStorage.setItem("hm_port",JSON.stringify({pos:P.pos}));localStorage.setItem("hm_watch",JSON.stringify(W));}catch{}
       $("wRsiLo").value=W.rules.rsiLo;$("wRsiHi").value=W.rules.rsiHi;$("wPHi").value=W.rules.pHi;$("wPLo").value=W.rules.pLo;$("wSma").checked=!!W.rules.sma;
-      syncStar();refreshPort();refreshWatch();
+      syncStar();SEEN.w=SEEN.p=false;renderPort();refreshWatch(true);tabData(TAB.cur);
       cloudNote("Portföy ve takip listesi hesabınızdan yüklendi; başka cihazda da açılır.");
     }else if(P.pos.length||W.list.length||CLOUD.dirty)cloudSave();
     else cloudNote("Portföy ve takip listesi hesabınıza kaydedilir; başka cihazda da açılır.");
