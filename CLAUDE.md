@@ -9,7 +9,7 @@ Borsa İstanbul için iki tek sayfalık claude.ai artifact'i. Veri, sayfayı aç
 | Pusula Masa | `src/masa/` | `dist/pusula-masa.html` | https://claude.ai/artifact/TnTka4UxK9ApbxrzZThaVF |
 | Pusula Lab | `src/lab/` | `dist/pusula-lab.html` | https://claude.ai/artifact/CxbqTgjBUvgJusp9uVJgW2 |
 
-GitHub: `ErgunUral/fintabels` (public). Kullanıcıyla Türkçe konuş.
+GitHub: `ErgunUral/Pusula_Masa` (public; eski adı `fintabels`). Kullanıcıyla Türkçe konuş.
 
 ## Token tasarrufu kuralları
 
