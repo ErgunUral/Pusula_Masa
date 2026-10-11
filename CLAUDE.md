@@ -60,7 +60,7 @@ Masa'nın yetenek bildirimi: `mcp` (Fintables: veri_sorgula, dokumanlarda_ara, d
 2. Yayın "daha yeni sürüm var" diye reddedilirse sayfa başka yerde değişmiştir. Reddin verdiği kayıtlı dosyayı **okumadan** `node build.mjs --diff <o dosya>` çalıştır; çıkan farkları `src/`'ye işle, tekrar yayınla.
 3. Yayından sonra aşağıdaki sürüm satırını güncelle, commit ve push et.
 
-Son yayın: Masa sürüm 24, Lab sürüm 7 (11 Ekim 2026). Sürüm 18–22 başka oturumda yayınlandı.
+Son yayın: Masa sürüm 25, Lab sürüm 8 (11 Ekim 2026). Sürüm 18–22 başka oturumda yayınlandı.
 
 ## Bilinen borçlar
 
