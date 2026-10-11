@@ -9,7 +9,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = dirname(fileURLToPath(import.meta.url));
-const PAGES = { masa: "hisse-analiz-masasi.html", lab: "bist-strateji-lab.html" };
+const PAGES = { masa: "pusula-masa.html", lab: "pusula-lab.html" };
 const read = p => readFileSync(p, "utf8");
 
 // "//@include shared/x.js" satırı, src/ altındaki o dosyanın içeriğiyle değiştirilir
@@ -39,7 +39,7 @@ mkdirSync(dist, { recursive: true });
 const di = process.argv.indexOf("--diff");
 if (di > 0) {
   const other = process.argv[di + 1];
-  const page = /lab/i.test(other) || read(other).includes("<title>BIST Strateji Lab</title>") ? "lab" : "masa";
+  const page = /lab/i.test(other) || /<title>(BIST Strateji Lab|Pusula Lab)<\/title>/.test(read(other)) ? "lab" : "masa";
   const mine = join(dist, PAGES[page]);
   writeFileSync(mine, build(page));
   const r = spawnSync("git", ["diff", "--no-index", "-U0", "--no-color", mine, other], { encoding: "utf8", maxBuffer: 1 << 28 });

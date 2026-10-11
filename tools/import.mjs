@@ -4,7 +4,7 @@ import { readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 const [root, page, live] = process.argv.slice(2);
-const FILE = { masa: "hisse-analiz-masasi.html", lab: "bist-strateji-lab.html" }[page];
+const FILE = { masa: "pusula-masa.html", lab: "pusula-lab.html" }[page];
 const files = new Map();                                   // src'ye göre yol -> satırlar
 const L = rel => { if (!files.has(rel)) files.set(rel, readFileSync(join(root, "src", rel), "utf8").split("\n")); return files.get(rel); };
 const out = [];                                            // çıktı satırı -> [dosya, satır no]

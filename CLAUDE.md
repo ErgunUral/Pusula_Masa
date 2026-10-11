@@ -1,11 +1,13 @@
-# Fintables - Borsa
+# Pusula
+
+Eski adı "Fintables - Borsa"; sayfalar "Hisse Analiz Masası" ve "BIST Strateji Lab" idi (11 Ekim 2026'da yeniden adlandırıldı). Tarayıcı deposu anahtarları (`hm_*`, `lab_cfg`, IndexedDB `hisse-masa` / `bist-lab`) eski adlarıyla kaldı: değiştirilirse kullanıcının kayıtlı verisi kaybolur.
 
 Borsa İstanbul için iki tek sayfalık claude.ai artifact'i. Veri, sayfayı açan kişinin Fintables bağlayıcısından gelir; sunucu yok.
 
 | Sayfa | Kaynak | Çıktı | Artifact |
 |---|---|---|---|
-| Hisse Analiz Masası | `src/masa/` | `dist/hisse-analiz-masasi.html` | https://claude.ai/artifact/TnTka4UxK9ApbxrzZThaVF |
-| BIST Strateji Lab | `src/lab/` | `dist/bist-strateji-lab.html` | https://claude.ai/artifact/CxbqTgjBUvgJusp9uVJgW2 |
+| Pusula Masa | `src/masa/` | `dist/pusula-masa.html` | https://claude.ai/artifact/TnTka4UxK9ApbxrzZThaVF |
+| Pusula Lab | `src/lab/` | `dist/pusula-lab.html` | https://claude.ai/artifact/CxbqTgjBUvgJusp9uVJgW2 |
 
 GitHub: `ErgunUral/fintabels` (public). Kullanıcıyla Türkçe konuş.
 
