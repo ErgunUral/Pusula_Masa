@@ -11,7 +11,8 @@ function errCopy(e){
     case"blocked_by_policy":case"approval_required":return"Kuruluşunuzun politikası bu Fintables aracını engelliyor.";
     case"server_unavailable":case"rate_limited":return"Fintables şu an yanıt vermiyor. Biraz sonra yeniden deneyin.";
     case"capability_disabled":case"capability_removed":return"Bu görünüm bağlayıcı çağrılarını desteklemiyor. Sayfayı claude.ai içinde açın.";
-    case"tool_error":return"Fintables sorguyu çalıştıramadı: "+(e.message||"bilinmeyen hata");
+    case"upstream_error":return/istek sınırı|sınırına ulaş/i.test(String(e.message||""))?"Fintables günlük sorgu sınırına ulaşıldı. Yarın tekrar deneyin.":"Fintables sunucusu hata döndü"+(e.message?": "+String(e.message).slice(0,140):"")+".";
+    case"tool_error":return/istek sınırı|sınırına ulaş/i.test(String(e.message||""))?"Fintables günlük sorgu sınırına ulaşıldı. Yarın tekrar deneyin.":"Fintables sorguyu çalıştıramadı: "+(e.message||"bilinmeyen hata");
     default:return"Veri alınamadı ("+(c||"hata")+"). Yeniden denemek için Analiz et'e basın.";
   }
 }

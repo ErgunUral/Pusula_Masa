@@ -16,7 +16,7 @@
       <div class="sugg" id="sugg" hidden></div>
     </form>
     <nav class="nav" id="tabs" role="tablist" aria-label="Bölümler">
-      <button type="button" role="tab" data-tab="teknik" aria-selected="false">Teknik</button><button type="button" role="tab" data-tab="temel" aria-selected="false">Temel</button><button type="button" role="tab" data-tab="analist" aria-selected="false">Analistler</button><button type="button" role="tab" data-tab="sahiplik" aria-selected="false">Sahiplik</button><button type="button" role="tab" data-tab="kap" aria-selected="false">KAP</button><button type="button" role="tab" data-tab="model" aria-selected="false">Model</button><button type="button" role="tab" data-tab="ai" aria-selected="false">Yapay zeka</button><span class="tabsep" aria-hidden="true"></span><button type="button" role="tab" data-tab="portfoy" aria-selected="false">Portföy</button><button type="button" role="tab" data-tab="takip" aria-selected="false">Takip</button><button type="button" role="tab" data-tab="tarama" aria-selected="false">BIST 30</button><a href="https://claude.ai/artifact/CxbqTgjBUvgJusp9uVJgW2" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Strateji Lab ↗</a>
+      <button type="button" role="tab" data-tab="ozet" aria-selected="false">Özet</button><button type="button" role="tab" data-tab="teknik" aria-selected="false">Teknik</button><button type="button" role="tab" data-tab="temel" aria-selected="false">Temel</button><button type="button" role="tab" data-tab="analist" aria-selected="false">Analistler</button><button type="button" role="tab" data-tab="sahiplik" aria-selected="false">Sahiplik</button><button type="button" role="tab" data-tab="akis" aria-selected="false">Alan / satan</button><button type="button" role="tab" data-tab="kap" aria-selected="false">KAP</button><button type="button" role="tab" data-tab="model" aria-selected="false">Model</button><button type="button" role="tab" data-tab="ai" aria-selected="false">Yapay zeka</button><span class="tabsep" aria-hidden="true"></span><button type="button" role="tab" data-tab="alarmlar" aria-selected="false">Alarmlar</button><button type="button" role="tab" data-tab="portfoy" aria-selected="false">Portföy</button><button type="button" role="tab" data-tab="takip" aria-selected="false">Takip</button><button type="button" role="tab" data-tab="tarama" aria-selected="false">BIST 30</button><button type="button" role="tab" data-tab="ttarama" aria-selected="false">Temel tarama</button><a href="https://claude.ai/artifact/CxbqTgjBUvgJusp9uVJgW2" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">Strateji Lab ↗</a>
     </nav>
   </div>
 </header>
@@ -31,6 +31,22 @@
     <div><div class="lbl">52 hafta aralığı</div><div class="val" id="q52">—</div><div class="rng"><b id="q52m" style="left:50%"></b></div></div>
     <div><div class="lbl">Sektör</div><div class="val" id="qSector" style="font-family:var(--f-body);font-size:.95rem">—</div><div class="sub" id="qIdx"></div></div>
   </div>
+
+  <!-- Alarmlar -->
+  <section id="alarmlar" role="tabpanel">
+    <div class="sec-head"><h2>Alarmlar</h2><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="stamp" id="alStatus">Portföy, takip listesi ve BIST 30 için teknik alarmlar</span><button class="btn primary" id="alRun" type="button" disabled>Alarmları tara</button></div></div>
+    <div class="panel">
+      <div class="m-ctrl" style="font-size:.86rem;color:var(--muted);margin-bottom:10px;flex-wrap:wrap">
+        <span>Kapsam:</span><label><input type="checkbox" id="alP" checked> Portföy</label><label><input type="checkbox" id="alW" checked> Takip listesi</label><label><input type="checkbox" id="alB"> BIST 30</label>
+        <span style="margin-left:10px">Göster:</span><label><input type="checkbox" id="alOnly" checked> Yalnızca alarmı olanlar</label>
+      </div>
+      <div class="prog" id="alProg" hidden><b></b></div>
+      <div class="tiles" id="alTiles" style="margin-top:10px"><div><div class="lbl">Taranan hisse</div><div class="val">—</div><div class="sub"></div></div><div><div class="lbl">Olumlu alarm</div><div class="val" style="color:var(--up)">—</div><div class="sub">Dip, yukarı kesişim, destekte</div></div><div><div class="lbl">Olumsuz alarm</div><div class="val" style="color:var(--down)">—</div><div class="sub">Aşırı alım, aşağı kesişim, dirençte</div></div><div><div class="lbl">Son mum</div><div class="val">—</div><div class="sub"></div></div></div>
+      <div class="tbl-wrap" style="margin-top:12px"><table><thead><tr><th>Hisse</th><th>Kaynak</th><th class="r">Kapanış</th><th class="r">RSI</th><th>Alarmlar</th></tr></thead><tbody id="alBody"><tr><td colspan="5" class="skel">"Alarmları tara" her hissenin son ~300 günlük fiyatını çeker (hisse başına 1 sorgu); sonuçlar gün boyunca bu tarayıcıda saklanır. Kurallar: RSI eşikleri (Takip sekmesindeki ayarlar), SMA50 kesişimi, altın/ölüm kesişimi, MACD kesişimi, 52 hafta zirve/dibi, güçlü destek/dirence yakınlık ve hacim patlaması. Hafta içi 09:45'te BIST 30 alarmları ayrıca e-postanıza gelir.</td></tr></tbody></table></div>
+      <h3 style="margin-top:18px">Alarm geçmişi (son 30 gün, bu tarayıcı)</h3>
+      <ul class="news" id="alHist" style="margin-top:6px"><li class="skel">Henüz kayıt yok.</li></ul>
+    </div>
+  </section>
 
   <!-- Portföy -->
   <section id="portfoy" role="tabpanel">
@@ -51,7 +67,7 @@
         <div id="pImpMsg" class="sub" aria-live="polite"></div>
       </div>
       <div class="kpis" id="pKpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px"></div>
-      <div class="tbl-wrap"><table id="pTable"><thead><tr><th data-k="c">Hisse</th><th class="r" data-k="q">Adet</th><th class="r" data-k="m">Maliyet</th><th class="r" data-k="p">Fiyat</th><th class="r" data-k="g">Gün</th><th class="r" data-k="v">Değer</th><th class="r" data-k="pl">K/Z</th><th class="r" data-k="plp">K/Z %</th><th class="r" data-k="w">Ağırlık</th><th>Teknik</th><th></th></tr></thead><tbody id="pBody"><tr><td colspan="11" class="skel">Yükleniyor…</td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table id="pTable"><thead><tr><th data-k="c">Hisse</th><th class="r" data-k="q">Adet</th><th class="r" data-k="m">Maliyet</th><th class="r" data-k="p">Fiyat</th><th class="r" data-k="g">Gün</th><th class="r" data-k="v">Değer</th><th class="r" data-k="pl">K/Z</th><th class="r" data-k="plp">K/Z %</th><th class="r" data-k="w">Ağırlık</th><th class="r" data-k="fk">F/K</th><th class="r" data-k="pddd">PD/DD</th><th class="r" data-k="roe">ÖK kâr.</th><th class="r" data-k="grwNet">Net kâr büy.</th><th>Teknik</th><th></th></tr></thead><tbody id="pBody"><tr><td colspan="15" class="skel">Yükleniyor…</td></tr></tbody></table></div>
       <div class="sub" style="margin-top:8px;font-size:.8rem"><span id="pStore">Portföy bu tarayıcıda saklanıyor.</span> Teknik sütunu, hisse takip listesindeyse oradaki RSI/SMA50 alarmlarını gösterir. Fiyatlar Fintables'tan gelir; temettü ve bölünme sonrası maliyet düzeltmesi aracı kurumdan farklı olabilir.</div>
     </div>
   </section>
@@ -88,7 +104,7 @@
         <label>Model ≥ %<input id="wPHi" type="number" min="50" max="95" step="1" style="width:4.2em"></label>
         <label>Model ≤ %<input id="wPLo" type="number" min="5" max="50" step="1" style="width:4.2em"></label>
       </div>
-      <div class="tbl-wrap"><table><thead><tr><th>Hisse</th><th class="r">Fiyat</th><th class="r">Gün</th><th class="r">RSI</th><th class="r">SMA50</th><th class="r">Model</th><th>Alarmlar</th><th></th></tr></thead><tbody id="wBody"><tr><td colspan="8" class="skel">Yükleniyor…</td></tr></tbody></table></div>
+      <div class="tbl-wrap"><table><thead><tr><th>Hisse</th><th class="r">Fiyat</th><th class="r">Gün</th><th class="r">RSI</th><th class="r">SMA50</th><th class="r">Model</th><th class="r">F/K</th><th class="r">PD/DD</th><th class="r">ÖK kâr.</th><th class="r">Net kâr büy.</th><th>Alarmlar</th><th></th></tr></thead><tbody id="wBody"><tr><td colspan="12" class="skel">Yükleniyor…</td></tr></tbody></table></div>
     </div>
   </section>
 
@@ -103,6 +119,33 @@
       <form class="ask" id="askForm" hidden><input id="askIn" placeholder="Bu hisse hakkında bir soru sorun (ör. borçluluk risk mi?)" maxlength="300"><button class="btn" type="submit">Sor</button></form>
       <div class="disclaimer" id="aiDisc">Yorumlar Fintables verilerinden otomatik üretilir; yatırım tavsiyesi değildir.</div>
     </div>
+  </section>
+
+  <!-- Özet / hisse karnesi -->
+  <section id="ozet" role="tabpanel">
+    <div class="sec-head"><h2>Hisse karnesi</h2><span class="stamp" id="ozStamp"></span></div>
+    <div class="oz-grid" id="ozVade">
+      <div class="oz-card"><div class="lbl">Kısa vade · 1–4 hafta</div><div class="vd">—</div><ul></ul></div>
+      <div class="oz-card"><div class="lbl">Orta vade · 1–6 ay</div><div class="vd">—</div><ul></ul></div>
+      <div class="oz-card"><div class="lbl">Uzun vade · 6 ay +</div><div class="vd">—</div><ul></ul></div>
+    </div>
+    <div class="panel" style="margin-top:12px">
+      <div class="sec-head" style="margin-bottom:0"><h3>Güçlü destek / direnç ve teknik al–sat bölgeleri</h3><span class="stamp" id="srStamp"></span></div>
+      <div class="srbar" id="srBar"></div>
+      <div class="legend" style="margin-top:2px"><span><i style="background:var(--up)"></i>Destek</span><span><i style="background:var(--down)"></i>Direnç</span><span><i style="background:var(--fg)"></i>Fiyat</span><span>Çizgi kalınlığı = seviyenin gücü</span></div>
+      <div class="zone" id="srZone"></div>
+      <div class="tbl-wrap" style="margin-top:10px"><table><thead><tr><th>Seviye</th><th class="r">Fiyat</th><th class="r">Uzaklık</th><th class="r">Test sayısı</th><th>Güç</th></tr></thead><tbody id="srBody"><tr><td colspan="5" class="skel">Fiyat geçmişi yükleniyor…</td></tr></tbody></table></div>
+      <p class="sub" id="srNote" style="margin:8px 0 0;font-size:.8rem;max-width:100ch"></p>
+    </div>
+    <div class="oz-2">
+      <div class="panel"><h3>Değerleme: pahalı mı?</h3><div class="vd" id="valVd" style="font-family:var(--f-display);font-weight:800;font-stretch:80%;font-size:1.35rem;margin:8px 0 4px">—</div>
+        <div class="tbl-wrap"><table><thead><tr><th>Ölçüt</th><th class="r">Hisse</th><th class="r">Sektör ortancası</th><th class="r">BIST 100 ortancası</th></tr></thead><tbody id="valBody"><tr><td colspan="4" class="skel">Yükleniyor…</td></tr></tbody></table></div>
+        <ul class="sub" id="valWhy" style="margin:8px 0 0;padding-left:18px"></ul></div>
+      <div class="panel"><h3>Bedelsiz durumu</h3>
+        <div class="tiles" id="bdTiles" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-top:10px"><div><div class="lbl">Bedelsiz potansiyeli</div><div class="val">—</div><div class="sub">Özkaynak ÷ ödenmiş sermaye</div></div><div><div class="lbl">Süreç</div><div class="val" style="font-family:var(--f-body);font-size:1rem">—</div><div class="sub"></div></div></div>
+        <ul class="news" id="bdList" style="margin-top:8px"><li class="skel">KAP sermaye artırımı bildirimleri yükleniyor…</li></ul></div>
+    </div>
+    <p class="sub" style="margin:10px 0 0;font-size:.8rem;max-width:100ch">Bu karne Fintables verisinden kurala dayalı hesaplanır; al–sat bölgeleri teknik seviyelerdir, yatırım tavsiyesi değildir. Seviyeler son ~300 işlem günündeki dönüş noktalarının kümelenmesiyle bulunur; zarar kes seviyesi güçlü desteğin 1,2 ATR altına konur.</p>
   </section>
 
   <!-- Technical -->
@@ -146,6 +189,26 @@
     <div class="panel" style="margin-top:12px"><div class="tbl-wrap"><table id="scTable"><thead><tr>
       <th data-k="code" aria-sort="none">Hisse</th><th class="r" data-k="p" aria-sort="none">Fiyat</th><th class="r" data-k="g" aria-sort="none">Gün</th><th class="r" data-k="r21" aria-sort="none">1 ay</th><th class="r" data-k="r63" aria-sort="none">3 ay</th><th class="r" data-k="rsi" aria-sort="none">RSI</th><th class="r" data-k="macdUp" aria-sort="none">MACD</th><th class="r" data-k="s50" aria-sort="none">SMA50'ye göre</th><th class="r" data-k="s200" aria-sort="none">SMA200'e göre</th><th class="r" data-k="score" aria-sort="descending">Teknik skor</th><th class="r" data-k="model" aria-sort="none">Model</th>
     </tr></thead><tbody id="scBody"><tr><td colspan="11" class="skel">Tarama, 30 hissenin fiyat geçmişini Fintables'tan çeker ve paneldeki aynı göstergeleri hesaplar (yaklaşık 20–40 saniye). Sütun başlıklarına tıklayarak sıralayabilirsiniz.</td></tr></tbody></table></div></div>
+  </section>
+
+  <!-- Temel tarama -->
+  <section id="ttarama" role="tabpanel">
+    <div class="sec-head"><h2>Temel tarama · son finansal dönem</h2><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="stamp" id="ftStatus">Son açıklanan bilançolara göre</span>
+      <div class="seg" id="ftU"><button type="button" data-v="XU030" aria-pressed="false">BIST 30</button><button type="button" data-v="XU050" aria-pressed="false">BIST 50</button><button type="button" data-v="XU100" aria-pressed="true">BIST 100</button></div>
+      <button class="btn primary" id="ftRun" type="button" disabled>Taramayı çalıştır</button></div></div>
+    <div class="panel" style="margin-top:10px">
+      <div class="m-ctrl" style="font-size:.86rem;color:var(--muted);margin-bottom:10px;flex-wrap:wrap">
+        <span>Filtre:</span>
+        <label>F/K ≤ <input id="ftFk" type="number" min="0" step="1" placeholder="—" style="width:4.5em"></label>
+        <label>PD/DD ≤ <input id="ftPd" type="number" min="0" step="0.1" placeholder="—" style="width:4.5em"></label>
+        <label>Özkaynak kârlılığı ≥ % <input id="ftRoe" type="number" step="1" placeholder="—" style="width:4.5em"></label>
+        <label>Net kâr büyümesi ≥ % <input id="ftGr" type="number" step="1" placeholder="—" style="width:4.5em"></label>
+        <label><input id="ftPos" type="checkbox" checked> Zarar edenleri gizle</label>
+      </div>
+      <div class="tbl-wrap"><table id="ftTable"><thead><tr><th data-k="code">Hisse</th><th data-k="per">Dönem</th><th class="r" data-k="mcap">Piy. değeri</th><th class="r" data-k="fk">F/K</th><th class="r" data-k="pddd">PD/DD</th><th class="r" data-k="roe">ÖK kârlılığı</th><th class="r" data-k="margin">Net marj</th><th class="r" data-k="grwRev">Satış büy.</th><th class="r" data-k="grwNet">Net kâr büy.</th><th class="r" data-k="score">Bileşik skor</th><th></th></tr></thead>
+        <tbody id="ftBody"><tr><td colspan="11" class="skel">Her hissenin en son açıklanan finansal dönemi (yıllıklandırılmış son 12 ay kârı ve dönem sonu özkaynak) ile güncel piyasa değeri kullanılır. BIST 100 için yaklaşık 15 Fintables sorgusu; sonuçlar 3 gün bu tarayıcıda saklanır.</td></tr></tbody></table></div>
+      <p class="sub" style="margin:8px 0 0;font-size:.8rem">Bileşik skor: düşük F/K, düşük PD/DD, yüksek özkaynak kârlılığı ve yüksek net kâr büyümesinin evren içindeki yüzdelik sıralarının ortalaması (0–100). Bankalarda satış yerine faaliyet brüt kârı kullanılır. Büyüme, bir önceki yılın aynı dönemine göre son 12 ay toplamıdır.</p>
+    </div>
   </section>
 
   <!-- Model -->
@@ -280,6 +343,24 @@
       </div>
     </div>
     <p class="sub" style="margin:10px 0 0;max-width:90ch">Bu bölüm takas (MKK saklama) verisi değildir: yalnızca yatırım, emeklilik ve borsa yatırım fonlarının aylık portföy raporlarını ve Borsa İstanbul'un günlük açığa satış istatistiklerini gösterir. Fon raporları ayı izleyen ayın ilk 10 gününde yayımlanır. Açığa satış oranı, açığa satış yapılan günlerin toplam işlem hacmine göredir.</p>
+  </section>
+
+  <!-- Alan / satan -->
+  <section id="akis" role="tabpanel">
+    <div class="sec-head"><h2>Kim alıyor, kim satıyor?</h2><span class="stamp" id="akStamp"></span></div>
+    <div class="note" style="margin-bottom:12px">Aracı kurum dağılımı (AKD) ve takas verisi Fintables bağlantısında bulunmuyor. Bu sekme mevcut veriden üç tamamlayıcı görünüm verir: <b>içeriden işlemler ve şirketin geri alımları</b> (KAP, isimli), <b>fonların pozisyon değişimi</b> (aylık) ve <b>gün içi para akışı tahmini</b> (isimsiz, yalnızca yön).</div>
+    <div class="tiles" id="akTiles"><div><div class="lbl">Son gün para akışı (tahmin)</div><div class="val">—</div><div class="sub"></div></div><div><div class="lbl">Alıcı baskısı</div><div class="val">—</div><div class="sub">Yükselen 5 dk mumlardaki hacim payı</div></div><div><div class="lbl">20 gün para akışı</div><div class="val">—</div><div class="sub">Günlük mum konumuna göre</div></div><div><div class="lbl">Son içeriden işlem</div><div class="val" style="font-family:var(--f-body);font-size:1rem">—</div><div class="sub"></div></div></div>
+    <div class="grid2" style="margin-top:16px">
+      <div class="panel"><h3>Son seans: birikimli para akışı (5 dk)</h3><div id="akIntra" style="margin-top:8px"><div class="skel">Bu sekme açıldığında yüklenir.</div></div>
+        <h3 style="margin-top:14px">Son 20 gün: günlük net akış</h3><div id="akDaily" style="margin-top:8px"></div>
+        <p class="sub" style="margin:6px 0 0;font-size:.78rem">Tahmin yöntemi: 5 dakikalık mum bir öncekinden yüksek kapandıysa hacmi alıcı, düşük kapandıysa satıcı tarafına yazılır; günlükte kapanışın gün içi aralıktaki konumu (Chaikin) kullanılır. Gerçek alıcı/satıcı kimliğini göstermez.</p></div>
+      <div class="panel"><h3>Fonlar: bu ay artıran / azaltan</h3><div class="sub" id="akFundStamp" style="margin:4px 0 8px"></div>
+        <div class="grid2" style="grid-template-columns:1fr 1fr;gap:12px"><div><div class="lbl" style="color:var(--up)">Artıran / yeni giren</div><ul class="rank" id="akFundUp"></ul></div><div><div class="lbl" style="color:var(--down)">Azaltan / çıkan</div><ul class="rank" id="akFundDn"></ul></div></div></div>
+    </div>
+    <div class="panel" style="margin-top:16px"><h3>İçeriden işlemler (KAP pay alım satım bildirimleri)</h3>
+      <div class="tbl-wrap" style="margin-top:6px"><table><thead><tr><th>Tarih</th><th>Kim</th><th>İşlem</th><th class="r">Lot</th><th class="r">Fiyat</th><th class="r">≈ Tutar</th><th class="r">Gün sonu pay</th></tr></thead><tbody id="akIns"><tr><td colspan="7" class="skel">—</td></tr></tbody></table></div></div>
+    <div class="panel" style="margin-top:16px"><h3>Şirketin pay geri alımları</h3>
+      <div class="tbl-wrap" style="margin-top:6px"><table><thead><tr><th>Tarih</th><th class="r">Lot</th><th class="r">Ort. fiyat</th><th class="r">≈ Tutar</th><th class="r">Sermayeye oranı</th></tr></thead><tbody id="akBuy"><tr><td colspan="5" class="skel">—</td></tr></tbody></table></div><div class="sub" id="akBuySum" style="margin-top:6px"></div></div>
   </section>
 
   <!-- KAP -->

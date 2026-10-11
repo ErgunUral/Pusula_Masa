@@ -41,10 +41,10 @@ let wClearArm=0;$("wClear").onclick=()=>{if(!W.list.length)return;if(Date.now()-
 let wCache={};
 async function refreshWatch(rulesOnly){
   const body=$("wBody");
-  if(!W.list.length){body.innerHTML=`<tr><td colspan="8" class="skel">Listeniz boş. Bir hisse açıp "Takibe al"a basın ya da "Toplu içe aktar" ile kod listesi yapıştırın.</td></tr>`;$("wCount").textContent="";return;}
+  if(!W.list.length){body.innerHTML=`<tr><td colspan="12" class="skel">Listeniz boş. Bir hisse açıp "Takibe al"a basın ya da "Toplu içe aktar" ile kod listesi yapıştırın.</td></tr>`;$("wCount").textContent="";return;}
   if(!S.mcp)return;
   if(!rulesOnly){
-    body.innerHTML=`<tr><td colspan="8" class="skel">${W.list.length} hisse güncelleniyor…</td></tr>`;
+    body.innerHTML=`<tr><td colspan="12" class="skel">${W.list.length} hisse güncelleniyor…</td></tr>`;
     try{
       const q=await sql(`SELECT hisse_senedi_kodu, son_fiyat, son_fiyat_zaman_utc, gunici_getiri FROM hisse_senetleri WHERE hisse_senedi_kodu IN (${inList(W.list)}) LIMIT 150`,"Takip listesi fiyatları");
       const qm=Object.fromEntries(q.map(r=>[r.hisse_senedi_kodu,r]));
@@ -59,9 +59,10 @@ async function refreshWatch(rulesOnly){
           const r=rsi(c),s50=sma(c,50),n=c.length-1;
           wCache[code]={p:qq?qq.son_fiyat:c[n],g:qq?qq.gunici_getiri:null,rsi:r[n],above:s50[n]!=null?c[n]>s50[n]:null,cross:s50[n]!=null&&s50[n-1]!=null?(c[n]>s50[n])!==(c[n-1]>s50[n-1]):false};
         }catch(e){wCache[code]={err:"Hesaplanamadı"};}});};
-      let gi=0,done=0;const worker=async()=>{while(gi<groups.length){const g=groups[gi++];try{await one(g);}catch(e){g.forEach(code=>wCache[code]={err:errCopy(e)});}done++;if(groups.length>3)body.innerHTML=`<tr><td colspan="8" class="skel">${W.list.length} hisse güncelleniyor… ${done}/${groups.length}</td></tr>`;}};
+      let gi=0,done=0;const worker=async()=>{while(gi<groups.length){const g=groups[gi++];try{await one(g);}catch(e){g.forEach(code=>wCache[code]={err:errCopy(e)});}done++;if(groups.length>3)body.innerHTML=`<tr><td colspan="12" class="skel">${W.list.length} hisse güncelleniyor… ${done}/${groups.length}</td></tr>`;}};
       await Promise.all(Array.from({length:Math.min(4,groups.length)},worker));
-    }catch(e){body.innerHTML=`<tr><td colspan="8"><div class="note err">${esc(errCopy(e))}</div></td></tr>`;return;}
+    }catch(e){body.innerHTML=`<tr><td colspan="12"><div class="note err">${esc(errCopy(e))}</div></td></tr>`;return;}
+    getLatestFund(W.list).then(()=>refreshWatch(true)).catch(()=>{});
   }
   const R=W.rules;let alarms=0;const wl=[];
   body.innerHTML=W.list.map(code=>{const d=wCache[code]||{};
@@ -73,11 +74,11 @@ async function refreshWatch(rulesOnly){
     if(mp!=null&&mp*100>=R.pHi)al.push([`Model %${fmt(mp*100,0)}`,"pos"]);
     if(mp!=null&&mp*100<=R.pLo)al.push([`Model %${fmt(mp*100,0)}`,"neg"]);
     alarms+=al.length;wl.push({hisse:code,fiyat:d.p,rsi:d.rsi&&+d.rsi.toFixed(1),alarmlar:al.map(a=>a[0])});
-    return `<tr><td><button type="button" class="linkbtn" data-c="${esc(code)}">${esc(code)}</button></td><td class="r num">${fmt(d.p)}</td><td class="r num" style="color:${d.g>0?"var(--up)":d.g<0?"var(--down)":"inherit"}">${pct(d.g,2)}</td><td class="r num">${d.rsi!=null?fmt(d.rsi,1):"—"}</td><td class="r">${d.above==null?"—":d.above?'<span class="pill pos">Üstünde</span>':'<span class="pill neg">Altında</span>'}</td><td class="r num">${mp!=null?"%"+fmt(mp*100,0):"—"}</td><td>${d.err?`<span class="sub">${esc(d.err)}</span>`:al.length?al.map(a=>`<span class="pill ${a[1]}" style="margin:0 4px 4px 0">${esc(a[0])}</span>`).join(""):'<span class="sub">Yok</span>'}</td><td class="r"><button type="button" class="xbtn" data-x="${esc(code)}" aria-label="${esc(code)} takipten çıkar" title="Takipten çıkar">×</button></td></tr>`;}).join("");
+    return `<tr><td><button type="button" class="linkbtn" data-c="${esc(code)}">${esc(code)}</button></td><td class="r num">${fmt(d.p)}</td><td class="r num" style="color:${d.g>0?"var(--up)":d.g<0?"var(--down)":"inherit"}">${pct(d.g,2)}</td><td class="r num">${d.rsi!=null?fmt(d.rsi,1):"—"}</td><td class="r">${d.above==null?"—":d.above?'<span class="pill pos">Üstünde</span>':'<span class="pill neg">Altında</span>'}</td><td class="r num">${mp!=null?"%"+fmt(mp*100,0):"—"}</td>${fundCells(FD.data[code])}<td>${d.err?`<span class="sub">${esc(d.err)}</span>`:al.length?al.map(a=>`<span class="pill ${a[1]}" style="margin:0 4px 4px 0">${esc(a[0])}</span>`).join(""):'<span class="sub">Yok</span>'}</td><td class="r"><button type="button" class="xbtn" data-x="${esc(code)}" aria-label="${esc(code)} takipten çıkar" title="Takipten çıkar">×</button></td></tr>`;}).join("");
   body.querySelectorAll(".linkbtn").forEach(b=>b.onclick=()=>{$("q").value=b.dataset.c;load(b.dataset.c);scrollTo({top:0,behavior:"smooth"});});
   body.querySelectorAll(".xbtn").forEach(b=>b.onclick=()=>{const i=W.list.indexOf(b.dataset.x);if(i>=0){W.list.splice(i,1);delete wCache[b.dataset.x];saveW();syncStar();refreshWatch(true);}});
   $("wCount").textContent=alarms?`${alarms} alarm`:"Alarm yok";$("wCount").className="pill "+(alarms?"warn":"neu");
-  S.watch=wl;
+  S.watch=wl.map(x=>Object.assign(x,fundBrief(FD.data[x.hisse])));
   if(P.pos.length)renderPort();
 }
 

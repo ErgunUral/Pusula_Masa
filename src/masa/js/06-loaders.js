@@ -28,6 +28,8 @@ async function load(code,fromUser=true){
   const jobs=[loadTech(code),loadFund(code),loadAnalyst(code),loadKap(code),loadOwn(code)];
   await Promise.allSettled(jobs);
   if(S.code!==code)return;
+  renderOzet(code);
+  AK.code=null;if(TAB.cur==="akis")loadAkis(code);
   renderModelSelected();
   $("aiRun").disabled=!S.sample;
   if(!S.sample){$("aiOut").innerHTML=`<p class="sub">Yapay zeka yorumu bu görünümde kullanılamıyor. Sayfayı claude.ai içinde açtığınızda etkinleşir.</p>`;}

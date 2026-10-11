@@ -31,7 +31,7 @@ async function loadOwn(code){
       sql(`SELECT r.yil, r.ay, COUNT(DISTINCT r.fon_kodu) AS fon_sayisi, SUM(a.fondaki_lot) AS toplam_lot ${JOIN} WHERE a.fon_kodu = '${code}' AND (r.yil > ${fy} OR (r.yil = ${fy} AND r.ay >= ${fm})) AND r.ay >= 1 AND r.ay <= 12 GROUP BY r.yil, r.ay ORDER BY r.yil DESC, r.ay DESC LIMIT 20`,`${code} fon sahipliği aylık seyir`),
       sql(`SELECT tarih_europe_istanbul, aciga_satis_hacmi_tl, toplam_islem_hacmi_tl, ortalama_aciga_satis_fiyati FROM gunluk_aciga_satis_istatistikleri WHERE hisse_senedi_kodu = '${code}' AND tarih_europe_istanbul >= DATE '${shortFrom}' ORDER BY tarih_europe_istanbul DESC LIMIT 40`,`${code} açığa satış istatistikleri`)]);
     if(S.code!==code)return;
-    const O=ownMonths(agg,today),SS=shortStats(sh),cur=O.cur,prev=O.prev;
+    const O=ownMonths(agg,today),SS=shortStats(sh),cur=O.cur,prev=O.prev;S.data._own={cur,prev};
     const cap=S.data.quote&&S.data.quote.odenmis_sermaye;
     const lotChg=cur&&prev&&prev.lot>0?(cur.lot/prev.lot-1)*100:null,capPct=cur&&cap>0?cur.lot/cap*100:null;
     if(cur){

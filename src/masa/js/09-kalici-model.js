@@ -21,13 +21,14 @@ async function scoreFrozen(code,T){
   try{
     const mk=await fzMarket();if(S.code!==code)return;
     const n=T.live?T.c.length-1:T.c.length;const T2={t:T.t.slice(0,n),o:T.o.slice(0,n),h:T.h.slice(0,n),l:T.l.slice(0,n),c:T.c.slice(0,n),v:T.v.slice(0,n)};
-    const X=stockFeatures(T2,mk,{shares:0,rep:[]});const x=X[n-1];
+    let F={shares:0,rep:[]};if(FZ.fund){try{await getLatestFund([code]);}catch{}if(S.code!==code)return;const d=FD.data[code];if(d&&!d.none&&d.pub&&d.shares>0)F={shares:d.shares,rep:[{pub:d.pub,net:d.net,rev:d.rev,eq:d.eq,revPrev:d.revPrev}]};}
+    const X=stockFeatures(T2,mk,F);const x=X[n-1];
     if(!x){$("fzScore").textContent="—";$("fzTxt").textContent=n<121?"Skor için en az 6 ay fiyat geçmişi gerekiyor.":"Bu hissenin son günü için endeks verisi henüz yok; birazdan tekrar deneyin.";S.data.kaliciModel=null;return;}
     const p=fzPredict(x),pc=fzPct(p);
     $("fzScore").textContent=fmt(pc,0);$("fzScore").style.color=pc>=70?"var(--up)":pc<=30?"var(--down)":"var(--fg)";$("fzMark").style.left=Math.max(0,Math.min(100,pc))+"%";
     const band=pc>=80?"en üst %20 dilimde":pc>=60?"ortalamanın üstünde":pc>40?"ortalama civarında":pc>20?"ortalamanın altında":"en alt %20 dilimde";
-    $("fzTxt").textContent=`${trDate(T2.t[n-1])} kapanışına göre ${code}, önümüzdeki 5 işlem gününde BIST 100 hisselerinin ortancasından iyi performans gösterme açısından ${band} (ham olasılık %${fmt(p*100,1)}).`+(T.live?" Seans içi mum kullanılmadı.":"");
-    S.data.kaliciModel={skorYuzdelik:+pc.toFixed(0),hamOlasilik:+p.toFixed(3),ufukGun:5,hedef:"BIST 100 ortancasını yenme",tarih:T2.t[n-1],testIC:FZ.oos.ic,testIC_t:FZ.oos.icT,not:"Walk-forward testte sinyal zayıf ve istatistiksel olarak anlamlı değil"};
+    $("fzTxt").textContent=`${trDate(T2.t[n-1])} kapanışına göre ${code}, önümüzdeki 5 işlem gününde BIST 100 hisselerinin ortancasından iyi performans gösterme açısından ${band} (ham olasılık %${fmt(p*100,1)}).`+(T.live?" Seans içi mum kullanılmadı.":"")+(FZ.fund?(F.rep.length?` Temel veri: ${FD.data[code].per} dönemi.`:" Temel veri bulunamadı; yalnızca fiyat girdileri kullanıldı."):"");
+    S.data.kaliciModel={sonFinansalDonem:FD.data[code]&&FD.data[code].per||null,skorYuzdelik:+pc.toFixed(0),hamOlasilik:+p.toFixed(3),ufukGun:5,hedef:"BIST 100 ortancasını yenme",tarih:T2.t[n-1],testIC:FZ.oos.ic,testIC_t:FZ.oos.icT,not:"Walk-forward testte sinyal zayıf ve istatistiksel olarak anlamlı değil"};
   }catch(e){if(S.code===code){$("fzScore").textContent="—";$("fzTxt").textContent=errCopy(e);}}
 }
 setTimeout(function fzInit(){const o=FZ.oos;
@@ -36,5 +37,5 @@ setTimeout(function fzInit(){const o=FZ.oos;
   $("fzSpr").textContent=pct(o.spread5d*100,2);$("fzHit").textContent=fmt(o.hit,3);
   $("fzN").textContent=nf(0).format(FZ.data.samples)+" örnek";$("fzNs").textContent=`${FZ.data.stocks} hisse · ${trDate(FZ.data.from)} – ${trDate(FZ.data.to)}`;
   const top=FZ.imp.slice(0,4).map(([k])=>(FEATS.find(f=>f[0]===k)||[k,k])[1]).join(", ");
-  $("fzNote").innerHTML=`Bu model ${trDate(FZ.data.from)}–${trDate(FZ.data.to)} arası BIST 100 günlük verisiyle bir kez eğitildi ve sayfaya gömüldü: her hisse için anında skor verir, Fintables'tan yalnızca 1 endeks sorgusu ister. En etkili girdiler: ${esc(top)}. <b>Dürüst not:</b> 2025-04'ten itibaren 6 çeyreklik yürüyen pencere testinde sinyal zayıf çıktı (IC ${fmt(o.ic,3)}, t ${fmt(o.icT,2)}); bu skor tek başına alım-satım kararı için yeterli değildir, diğer analizlerle birlikte bağlam olarak kullanın. Mevcut hisseler üzerinde eğitildiği için hayatta kalma yanlılığı içerir.`;},0);
+  $("fzNote").innerHTML=`Bu model ${trDate(FZ.data.from)}–${trDate(FZ.data.to)} arası BIST 100 günlük fiyatları ve her tarihte o ana kadar açıklanmış son finansal dönem verileriyle (F/K, PD/DD, satış büyümesi, özkaynak kârlılığı) bir kez eğitildi ve sayfaya gömüldü: her hisse için anında skor verir; Fintables'tan 1 endeks sorgusu ve hissenin son dönem finansalları için 3 sorgu ister (3 gün önbellek). En etkili girdiler: ${esc(top)}. <b>Dürüst not:</b> 2025-04'ten itibaren 6 çeyreklik yürüyen pencere testinde sinyal zayıf çıktı (IC ${fmt(o.ic,3)}, t ${fmt(o.icT,2)}); bu skor tek başına alım-satım kararı için yeterli değildir, diğer analizlerle birlikte bağlam olarak kullanın. Mevcut hisseler üzerinde eğitildiği için hayatta kalma yanlılığı içerir.`;},0);
 

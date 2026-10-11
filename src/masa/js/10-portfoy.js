@@ -41,16 +41,17 @@ let pClearArm=0;$("pClear").onclick=()=>{if(!P.pos.length)return;if(Date.now()-p
 document.querySelectorAll("#pTable th[data-k]").forEach(th=>th.onclick=()=>{const k=th.dataset.k;P.sort=P.sort.k===k?{k,dir:-P.sort.dir}:{k,dir:k==="c"?1:-1};renderPort();});
 async function refreshPort(){
   if(!P.pos.length){renderPort();return;}if(!S.mcp)return;
-  $("pBody").innerHTML=`<tr><td colspan="11" class="skel">${P.pos.length} pozisyon güncelleniyor…</td></tr>`;
+  $("pBody").innerHTML=`<tr><td colspan="15" class="skel">${P.pos.length} pozisyon güncelleniyor…</td></tr>`;
   try{const r=await sql(`SELECT hisse_senedi_kodu, son_fiyat, son_fiyat_zaman_utc, gunici_getiri FROM hisse_senetleri WHERE hisse_senedi_kodu IN (${inList(P.pos.map(x=>x.c))}) LIMIT 300`,"Portföy fiyatları");
-    P.q=Object.fromEntries(r.map(x=>[x.hisse_senedi_kodu,x]));P.at=r.map(x=>x.son_fiyat_zaman_utc).filter(Boolean).sort().pop()||null;renderPort();}
-  catch(e){$("pBody").innerHTML=`<tr><td colspan="11"><div class="note err">${esc(errCopy(e))}</div></td></tr>`;}}
+    P.q=Object.fromEntries(r.map(x=>[x.hisse_senedi_kodu,x]));P.at=r.map(x=>x.son_fiyat_zaman_utc).filter(Boolean).sort().pop()||null;renderPort();
+    getLatestFund(P.pos.map(x=>x.c)).then(renderPort).catch(()=>{});}
+  catch(e){$("pBody").innerHTML=`<tr><td colspan="15"><div class="note err">${esc(errCopy(e))}</div></td></tr>`;}}
 function renderPort(){
   const body=$("pBody"),kpi=$("pKpi");
-  if(!P.pos.length){body.innerHTML=`<tr><td colspan="11" class="skel">Portföy boş. "Toplu içe aktar" ile KOD ADET MALİYET satırlarını yapıştırın.</td></tr>`;kpi.innerHTML="";$("pCount").textContent="";body.parentElement.querySelector("tfoot")?.remove();return;}
+  if(!P.pos.length){body.innerHTML=`<tr><td colspan="15" class="skel">Portföy boş. "Toplu içe aktar" ile KOD ADET MALİYET satırlarını yapıştırın.</td></tr>`;kpi.innerHTML="";$("pCount").textContent="";body.parentElement.querySelector("tfoot")?.remove();return;}
   const rows=P.pos.map(x=>{const q=P.q[x.c]||{};const p=q.son_fiyat>0?q.son_fiyat:null;const g=q.gunici_getiri!=null?Number(q.gunici_getiri):null;
     const cost=x.q*x.m,v=p!=null?x.q*p:null,pl=v!=null?v-cost:null;const dayPl=v!=null&&g!=null?v-v/(1+g/100):null;
-    return{...x,p,g,cost,v,pl,plp:pl!=null?pl/cost:null,dayPl};});
+    const fd=FD.data[x.c]||{};return{...x,p,g,cost,v,pl,plp:pl!=null?pl/cost:null,dayPl,fk:fd.fk??null,pddd:fd.pddd??null,roe:fd.roe??null,grwNet:fd.grwNet??null};});
   const totV=rows.reduce((a,r)=>a+(r.v||0),0),totC=rows.reduce((a,r)=>a+(r.v!=null?r.cost:0),0),totD=rows.reduce((a,r)=>a+(r.dayPl||0),0);
   rows.forEach(r=>r.w=r.v!=null&&totV>0?r.v/totV:null);
   const {k,dir}=P.sort;rows.sort((a,b)=>{const A=a[k],B=b[k];if(A==null)return 1;if(B==null)return -1;return(typeof A==="string"?A.localeCompare(B,"tr"):A-B)*dir;});
@@ -60,15 +61,15 @@ function renderPort(){
   body.innerHTML=rows.map(r=>{const d=wCache[r.c];let tech='<span class="sub">—</span>';
     if(d&&!d.err){const al=[];if(d.rsi!=null&&d.rsi<=W.rules.rsiLo)al.push(["RSI "+fmt(d.rsi,0),"pos"]);if(d.rsi!=null&&d.rsi>=W.rules.rsiHi)al.push(["RSI "+fmt(d.rsi,0),"neg"]);if(W.rules.sma&&d.cross)al.push([d.above?"SMA50 ↑":"SMA50 ↓",d.above?"pos":"neg"]);
       tech=al.length?al.map(a=>`<span class="pill ${a[1]}" style="margin:0 4px 4px 0">${esc(a[0])}</span>`).join(""):`<span class="sub">RSI ${d.rsi!=null?fmt(d.rsi,0):"—"} · ${d.above==null?"":d.above?"SMA50 üstü":"SMA50 altı"}</span>`;}
-    return `<tr><td><button type="button" class="linkbtn" data-c="${esc(r.c)}">${esc(r.c)}</button></td><td class="r num">${fmt(r.q,0)}</td><td class="r num">${fmt(r.m)}</td><td class="r num">${r.p!=null?fmt(r.p):"—"}</td><td class="r num" style="color:${col(r.g)}">${r.g!=null?pct(r.g,2):"—"}</td><td class="r num">${tl(r.v)}</td><td class="r num" style="color:${col(r.pl)}">${r.pl!=null?fmt(r.pl):"—"}</td><td class="r num" style="color:${col(r.plp)}">${pctF(r.plp,1)}</td><td class="r num">${r.w!=null?pctW(r.w,1):"—"}<span class="wbar" style="width:${r.w!=null?Math.round(36*r.w/maxW):0}px"></span></td><td>${tech}</td><td class="r"><button type="button" class="xbtn" data-x="${esc(r.c)}" aria-label="${esc(r.c)} portföyden çıkar" title="Portföyden çıkar">×</button></td></tr>`;}).join("");
+    return `<tr><td><button type="button" class="linkbtn" data-c="${esc(r.c)}">${esc(r.c)}</button></td><td class="r num">${fmt(r.q,0)}</td><td class="r num">${fmt(r.m)}</td><td class="r num">${r.p!=null?fmt(r.p):"—"}</td><td class="r num" style="color:${col(r.g)}">${r.g!=null?pct(r.g,2):"—"}</td><td class="r num">${tl(r.v)}</td><td class="r num" style="color:${col(r.pl)}">${r.pl!=null?fmt(r.pl):"—"}</td><td class="r num" style="color:${col(r.plp)}">${pctF(r.plp,1)}</td><td class="r num">${r.w!=null?pctW(r.w,1):"—"}<span class="wbar" style="width:${r.w!=null?Math.round(36*r.w/maxW):0}px"></span></td>${fundCells(FD.data[r.c])}<td>${tech}</td><td class="r"><button type="button" class="xbtn" data-x="${esc(r.c)}" aria-label="${esc(r.c)} portföyden çıkar" title="Portföyden çıkar">×</button></td></tr>`;}).join("");
   let tf=body.parentElement.querySelector("tfoot");if(!tf){tf=document.createElement("tfoot");body.parentElement.appendChild(tf);}
-  const totPl=totV-totC;tf.innerHTML=`<tr><td>Toplam (${rows.length})</td><td></td><td class="r num">${tl(totC)}</td><td></td><td class="r num" style="color:${col(totD)}">${fmt(totD)}</td><td class="r num">${tl(totV)}</td><td class="r num" style="color:${col(totPl)}">${fmt(totPl)}</td><td class="r num" style="color:${col(totPl)}">${pctF(totC?totPl/totC:null,1)}</td><td class="r num">%100</td><td></td><td></td></tr>`;
+  const totPl=totV-totC;tf.innerHTML=`<tr><td>Toplam (${rows.length})</td><td></td><td class="r num">${tl(totC)}</td><td></td><td class="r num" style="color:${col(totD)}">${fmt(totD)}</td><td class="r num">${tl(totV)}</td><td class="r num" style="color:${col(totPl)}">${fmt(totPl)}</td><td class="r num" style="color:${col(totPl)}">${pctF(totC?totPl/totC:null,1)}</td><td class="r num">%100</td><td colspan="4"></td><td></td><td></td></tr>`;
   const win=rows.filter(r=>r.pl>0).length,lose=rows.filter(r=>r.pl<0).length;const top=rows.filter(r=>r.w!=null).sort((a,b)=>b.w-a.w).slice(0,3);
   const tile=(l,v,c)=>`<div class="pk"><div class="l">${l}</div><div class="v" style="color:${c||"inherit"}">${v}</div></div>`;
   kpi.innerHTML=tile("Piyasa değeri",tl(totV))+tile("Maliyet",tl(totC))+tile("Toplam K/Z",`${fmt(totPl)} ₺ · ${pctF(totC?totPl/totC:null,1)}`,col(totPl))+tile("Bugün",`${fmt(totD)} ₺ · ${pctF(totV-totD?totD/(totV-totD):null,2)}`,col(totD))+tile("Kârda / zararda",`${win} / ${lose}`)+tile("En büyük 3 ağırlık",top.length?pctW(top.reduce((a,r)=>a+r.w,0),0)+` <span class="sub" style="font-size:.78rem">${top.map(r=>r.c).join(", ")}</span>`:"—");
   $("pCount").textContent=P.at?`Fiyat: ${istDateTime(P.at)}`:"";$("pCount").className="pill neu";
   body.querySelectorAll(".linkbtn").forEach(b=>b.onclick=()=>{$("q").value=b.dataset.c;load(b.dataset.c);scrollTo({top:0,behavior:"smooth"});});
   body.querySelectorAll(".xbtn").forEach(b=>b.onclick=()=>{P.pos=P.pos.filter(x=>x.c!==b.dataset.x);saveP();renderPort();});
-  S.port=rows.map(r=>({hisse:r.c,adet:r.q,maliyet:r.m,fiyat:r.p,kz_yuzde:r.plp!=null?+(r.plp*100).toFixed(1):null,agirlik:r.w!=null?+(r.w*100).toFixed(1):null}));
+  S.port=rows.map(r=>({...fundBrief(FD.data[r.c]),hisse:r.c,adet:r.q,maliyet:r.m,fiyat:r.p,kz_yuzde:r.plp!=null?+(r.plp*100).toFixed(1):null,agirlik:r.w!=null?+(r.w*100).toFixed(1):null}));
 }
 

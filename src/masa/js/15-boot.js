@@ -10,7 +10,7 @@
   let last="ASELS";try{const v=localStorage.getItem("hm_last");if(v&&/^[A-Z0-9]{3,6}$/.test(v))last=v;}catch{}
   $("q").value=last;
   load(last,false);
-  $("mTrain").disabled=false;$("scRun").disabled=false;
+  $("mTrain").disabled=false;$("scRun").disabled=false;$("ftRun").disabled=false;$("alRun").disabled=false;
   if(ML.res)renderModel();
   refreshWatch();refreshPort();
 })();

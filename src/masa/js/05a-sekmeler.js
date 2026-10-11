@@ -1,7 +1,7 @@
 /* ---------- Sekmeler ---------- */
 /* Her bölüm (section) bir sekmedir; kimlikleri sekme adıdır. Hisse sekmelerinde üstteki fiyat şeridi görünür,
    liste sekmelerinde (portföy, takip, tarama) gizlenir. */
-const STOCK_TABS=["teknik","temel","analist","sahiplik","kap","model","ai"],LIST_TABS=["portfoy","takip","tarama"];
+const STOCK_TABS=["ozet","teknik","temel","analist","sahiplik","akis","kap","model","ai"],LIST_TABS=["alarmlar","portfoy","takip","tarama","ttarama"];
 const TAB={cur:"teknik",stock:"teknik"};
 /* Grafikler gizli sekmede oluşturulmuş olabilir: görünür olunca boyut ve aralık yeniden uygulanır */
 function fixCharts(){const C=S.charts;if(!C)return;const els=[$("chMain"),$("chRsi"),$("chMacd")];
@@ -14,10 +14,11 @@ function showTab(id,save=true){
   document.querySelectorAll("#tabs button").forEach(b=>{const on=b.dataset.tab===id;b.setAttribute("aria-selected",String(on));b.tabIndex=on?0:-1;});
   if(save){try{localStorage.setItem("hm_tab",id);}catch{}}
   if(id==="teknik")fixCharts();
+  if(id==="akis"&&S.code&&typeof loadAkis==="function"&&S.data&&S.data.T)loadAkis(S.code);
 }
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 $("tabs").addEventListener("keydown",e=>{if(e.key!=="ArrowRight"&&e.key!=="ArrowLeft")return;
   const all=[...STOCK_TABS,...LIST_TABS],i=(all.indexOf(TAB.cur)+(e.key==="ArrowRight"?1:all.length-1))%all.length;
   showTab(all[i]);const b=document.querySelector(`#tabs button[data-tab="${all[i]}"]`);if(b)b.focus();e.preventDefault();});
-{let t="teknik";try{t=localStorage.getItem("hm_tab")||"teknik";}catch{}showTab(t,false);}
+{let t="ozet";try{t=localStorage.getItem("hm_tab")||"ozet";}catch{}showTab(t,false);}
 
